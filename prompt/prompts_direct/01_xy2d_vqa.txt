@@ -1,0 +1,8 @@
+Task Description:
+The primary goal of this task is to accurately identify and provide the coordinates of a specified object within a given image. Your task is to analyze the image, locate the object, and return its position in the form of coordinates [x, y].
+
+Question:
+Where is {} located in the image?
+
+Provide your answer in the <answer> tag. Use the following format:
+<answer>[Final answer]</answer>

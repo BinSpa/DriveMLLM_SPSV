@@ -1,0 +1,7 @@
+yaw_valid_response_accuracy,yaw_score,yaw_valid_response_rate,xy2d_valid_response_accuracy,xy2d_score,xy2d_valid_response_rate,depth_valid_response_accuracy,depth_score,depth_valid_response_rate,dis_valid_response_accuracy,dis_score,dis_valid_response_rate,lr_valid_response_accuracy,lr_score,lr_valid_response_rate,fb_valid_response_accuracy,fb_score,fb_valid_response_rate
+0.0,0.0,0.0,,,,,,,,,,,,,,,
+,,,0.0,0.0,0.0,,,,,,,,,,,,
+,,,,,,0.0,0.0,0.0,,,,,,,,,
+,,,,,,,,,0.0,0.0,0.0,,,,,,
+,,,,,,,,,,,,0.0,0.0,0.0,,,
+,,,,,,,,,,,,,,,0.0,0.0,0.0

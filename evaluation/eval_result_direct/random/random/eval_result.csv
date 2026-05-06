@@ -1,0 +1,7 @@
+yaw_valid_response_accuracy,yaw_score,yaw_valid_response_rate,xy2d_valid_response_accuracy,xy2d_score,xy2d_valid_response_rate,depth_valid_response_accuracy,depth_score,depth_valid_response_rate,dis_valid_response_accuracy,dis_score,dis_valid_response_rate,lr_valid_response_accuracy,lr_score,lr_valid_response_rate,fb_valid_response_accuracy,fb_score,fb_valid_response_rate
+0.0681081081081081,0.0681081081081081,1.0,,,,,,,,,,,,,,,
+,,,0.015440191729252956,0.015440191729252956,1.0,,,,,,,,,,,,
+,,,,,,0.3427027027027027,0.3427027027027027,1.0,,,,,,,,,
+,,,,,,,,,0.08324324324324324,0.08324324324324324,1.0,,,,,,
+,,,,,,,,,,,,0.10594594594594595,0.10594594594594595,1.0,,,
+,,,,,,,,,,,,,,,0.11027027027027027,0.11027027027027027,1.0
