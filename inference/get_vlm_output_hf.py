@@ -15,6 +15,14 @@ import torch
 os.environ.setdefault('HF_HOME', '/root/autodl-tmp/hf_cache')
 os.environ.setdefault('HF_HUB_OFFLINE', '1')
 
+# Monkey-patch for LLaVA models on newer transformers (flash_attn_varlen_func removed)
+try:
+    from transformers import modeling_flash_attention_utils as _fau
+    if not hasattr(_fau, 'flash_attn_varlen_func'):
+        _fau.flash_attn_varlen_func = None
+except ImportError:
+    pass
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -27,7 +35,9 @@ SURDS_TASK_FILES = [
     "05_fb_vqas.json",
 ]
 
-LOAD_KWARGS = dict(dtype=torch.bfloat16, device_map="auto", trust_remote_code=True, local_files_only=True)
+LOAD_KWARGS = dict(dtype=torch.bfloat16, device_map="cuda:0", trust_remote_code=True, local_files_only=True)
+# Fall back to auto if model doesn't fit on single GPU
+USE_AUTO_DEVICE_MAP = False  # set True for models >40GB
 
 
 def load_model_and_processor(model_path: str):
@@ -66,15 +76,26 @@ def load_model_and_processor(model_path: str):
     except Exception as e:
         logger.info(f"AutoModel failed: {e}")
 
+    # Last resort: AutoModel with SDPA (bypass flash attention issues)
+    try:
+        sdpa_kwargs = {**LOAD_KWARGS, "attn_implementation": "sdpa"}
+        model = AutoModel.from_pretrained(model_path, **sdpa_kwargs)
+        logger.info(f"Loaded via AutoModel+SDPA: {type(model).__name__}")
+        return model, processor
+    except Exception as e:
+        logger.info(f"AutoModel+SDPA failed: {e}")
+
     raise ValueError(f"Could not load model {model_path}")
 
 
 def generate_response(model, processor, prompt: str, image: Image.Image,
-                      max_new_tokens: int = 768) -> str:
+                      max_new_tokens: int = None) -> str:
     """Generate a response for an image + prompt pair. Uses standard chat template approach."""
+    if max_new_tokens is None:
+        max_new_tokens = MAX_NEW_TOKENS if 'MAX_NEW_TOKENS' in dir() else 512
 
     # Resize image to reduce vision tokens and speed up processing
-    image = image.resize((800, 450), Image.LANCZOS)
+    image = image.resize((672, 378), Image.LANCZOS)
 
     # Handle InternVLChatModel with its specific chat() method
     model_type = type(model).__name__
@@ -179,5 +200,11 @@ if __name__ == "__main__":
                         help='Directory containing VQA JSON files')
     parser.add_argument('--save_dir', type=str, default='inference/vlm_outputs_hf',
                         help='Directory to save output JSON files')
+    parser.add_argument('--max_new_tokens', type=int, default=512,
+                        help='Maximum tokens to generate (512 default, 2048 for reasoning)')
     args = parser.parse_args()
+
+    # Pass max_tokens to generate_response via a module-level config
+    global MAX_NEW_TOKENS
+    MAX_NEW_TOKENS = args.max_new_tokens
     main(args)
