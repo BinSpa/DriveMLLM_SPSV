@@ -2,7 +2,7 @@
 
 ## Model Evaluation Results (from this repo)
 
-We evaluated 6 open-source VLMs on the SURDS benchmark using direct (non-reasoning) prompts on 2× NVIDIA A800 80GB GPUs. The original paper uses reasoning prompts with `<think>` chain-of-thought; our direct-prompt approach is ~100× faster but yields lower scores than the paper's reported results.
+We evaluated **11 open-source VLMs** on the SURDS benchmark using direct (non-reasoning) prompts on 2× NVIDIA A800 80GB GPUs. The original paper uses reasoning prompts with `<think>` chain-of-thought; our direct-prompt approach is ~100× faster but yields lower scores than the paper's reported results.
 
 ### Results (Direct Prompts, No CoT Reasoning)
 
@@ -10,11 +10,16 @@ We evaluated 6 open-source VLMs on the SURDS benchmark using direct (non-reasoni
 |---|-------|------|-----|------|-------|-----|----|----|---------|
 | - | Random Baseline | - | 0.068 | 0.015 | 0.343 | 0.083 | 0.106 | 0.110 | **0.121** |
 | 1 | Qwen3-VL-4B-Instruct | 4B | 0.024 | 0.041 | 0.442 | 0.292 | 0.066 | 0.059 | **0.154** |
-| 2 | Gemma-3-4B-it | 4B | 0.038 | 0.007 | 0.538 | 0.416 | 0.175 | 0.041 | **0.203** |
-| 3 | LLaVA-OneVision-1.5-4B | 4B | 0.019 | 0.000 | 0.377 | 0.476 | 0.603 | 0.000 | **0.246** |
-| 4 | Molmo2-4B | 4B | 0.077 | 0.009 | 0.324 | 0.530 | 0.514 | **0.158** | **0.269** |
-| 5 | InternVL3_5-4B-HF | 4B | 0.042 | 0.027 | 0.365 | 0.590 | **0.765** | 0.102 | **0.315** |
-| 6 | **Qwen3-VL-8B-Instruct** | 8B | **0.046** | **0.060** | **0.558** | **0.764** | 0.710 | 0.041 | **0.363** |
+| 2 | MiniCPM-V-4_5 | 4B | 0.084 | 0.053 | 0.004 | 0.357 | 0.508 | 0.048 | **0.176** |
+| 3 | Gemma-3-4B-it | 4B | 0.038 | 0.007 | 0.538 | 0.416 | 0.175 | 0.041 | **0.203** |
+| 4 | LLaVA-OneVision-1.5-4B | 4B | 0.019 | 0.000 | 0.377 | 0.476 | 0.603 | 0.000 | **0.246** |
+| 5 | Molmo2-8B | 8B | 0.070 | 0.030 | 0.354 | 0.446 | 0.617 | 0.005 | **0.254** |
+| 6 | LLaVA-OneVision-1.5-8B | 8B | 0.031 | 0.076 | 0.405 | 0.480 | 0.571 | 0.000 | **0.261** |
+| 7 | Molmo2-4B | 4B | 0.077 | 0.009 | 0.324 | 0.530 | 0.514 | **0.158** | **0.269** |
+| 8 | SAIL-VL2-8B | 8B | **0.146** | 0.005 | 0.339 | 0.335 | 0.661 | 0.137 | **0.271** |
+| 9 | InternVL3-8B-Instruct | 8B | 0.048 | 0.004 | 0.443 | 0.240 | 0.714 | **0.214** | **0.277** |
+| 10 | InternVL3_5-4B-HF | 4B | 0.042 | 0.027 | 0.365 | 0.590 | **0.765** | 0.102 | **0.315** |
+| 11 | **Qwen3-VL-8B-Instruct** | 8B | 0.046 | **0.060** | **0.558** | **0.764** | 0.710 | 0.041 | **0.363** |
 
 *Metrics: Yaw (orientation), XY2D (2D localization), Depth (distance), Dis (closer/farther), LR (left/right), FB (front/back). Score = accuracy over all ground-truth questions (unparseable = wrong).*
 
@@ -22,19 +27,22 @@ We evaluated 6 open-source VLMs on the SURDS benchmark using direct (non-reasoni
 
 - **Qwen3-VL-8B leads** at 0.363 avg (3× random baseline of 0.121), winning on 4/6 tasks
 - **InternVL3_5-4B is best 4B model** at 0.315; remarkable LR score of 0.765
-- **FB (front/back) is hardest** — only Molmo2-4B (0.158) beats random
-- **Output format compliance** critical — 8B models achieve 98%+ valid response rate vs 73% for 4B
-- **Scale matters** — 8B models significantly outperform 4B (0.363 vs 0.154–0.315)
+- **InternVL3-8B has best FB (front/back)** at 0.214 — the only model significantly beating random on this task
+- **SAIL-VL2-8B has best Yaw (orientation)** at 0.146 — 2× better than any other model
+- **FB and XY2D are the hardest tasks** — most models near-random on both
+- **Output format compliance** critical — 8B models achieve 98%+ valid response rate; MiniCPM suffers from 49.7% valid rate
+- **Scale matters** — 8B models generally outperform 4B (top scores: 0.363 vs 0.315)
 
-### Failed / Untested Models
+### Model-Specific Fixes for Custom Architectures
 
-| Model | Issue |
-|-------|-------|
-| InternVL3-8B-Instruct | `InternVLChatModel` uses different API (no `visual_encode`); needs custom inference |
-| LLaVA-OneVision-1.5-8B | Flash attention varlen import error with transformers 4.57 |
-| MiniCPM-V-4_5 | Processor has no chat template; requires custom inference code |
-| SAIL-VL2-8B | Loads as `SAILVLModel` via AutoModel; processor lacks vision support (`Qwen2TokenizerFast`) |
-| Molmo2-8B | Running in background (est. ~2 hrs); results will appear in `evaluation/eval_result_direct/` |
+Four models required architecture-specific inference code beyond the standard HF pipeline:
+
+| Model | Fix |
+|-------|-----|
+| LLaVA-OneVision-1.5-8B | Monkey-patch `flash_attn_varlen_func` import for transformers 4.57 |
+| InternVL3-8B-Instruct | 448×448 CLIP preprocessing → `chat(pixel_values=...)` with ImageNet normalization |
+| SAIL-VL2-8B | Same 448×448 CLIP preprocessing as InternVL3-8B |
+| MiniCPM-V-4_5 | `chat(image=img, msgs=json.dumps([{'role':'user','content':prompt}]), tokenizer=tok)` |
 
 ### Running Evaluation with This Repo
 
